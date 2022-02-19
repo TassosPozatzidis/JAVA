@@ -1,0 +1,2 @@
+NewsAPI File - Η βιβλιοθήκη για την σύνδεση με το new api- το κλειδί (Api key) βρίσκεται στη κλάση NewsAPI.java
+NewsAppGUI - Η main βρίσκεται στην App.java class. Τα credentials για τη σύνδεση με τη βάση στη κλάση DatabaseConnection.java

@@ -1,6 +1,8 @@
 package gr.unipi.NewsAppGUI;
 
 
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,10 +40,11 @@ public class HeadlinesSceneCreator  extends SceneCreator implements EventHandler
 	//Grid pane
 	GridPane rootGridPane, inputFieldsPane;
 	// buttons
-	Button searchNewsBtn,saveNewsBtn,clearBtn,backBtn,closeBtn;
+	Button searchNewsBtn,saveNewsBtn,clearBtn,backBtn,closeBtn,previousBtn;
 	
 	//combo box
 	ComboBox comboBoxcat;
+	ComboBox comboBoxcn;
 	
 	//label
 	Label countryLbl,categoryLbl;
@@ -69,6 +72,7 @@ public class HeadlinesSceneCreator  extends SceneCreator implements EventHandler
 		
 		searchNewsBtn = new Button("Search");
 		saveNewsBtn = new Button("Search History");
+		previousBtn = new Button("Previous Search");
 		backBtn = new Button("Back");
 		clearBtn = new Button("Clear");
 		closeBtn = new Button("Exit");
@@ -76,9 +80,11 @@ public class HeadlinesSceneCreator  extends SceneCreator implements EventHandler
 		saveNewsBtn.setMinSize(120, 30);
 		backBtn.setMinSize(120, 30);
 		closeBtn.setMinSize(120, 30);
+		clearBtn.setMinSize(120, 30);
 		
 		comboBoxcat = new ComboBox();					//combobox for categories selection
-
+		comboBoxcn = new ComboBox();
+		//combobox select categories
 		comboBoxcat.getItems().add("");
 		comboBoxcat.getItems().add("business");
 		comboBoxcat.getItems().add("entertainment");
@@ -87,13 +93,33 @@ public class HeadlinesSceneCreator  extends SceneCreator implements EventHandler
 		comboBoxcat.getItems().add("science");
 		comboBoxcat.getItems().add("sports");
 		comboBoxcat.getItems().add("technology");
+		
 
 		comboBoxcat.setOnAction((event) -> {
 			int selectedIndex = comboBoxcat.getSelectionModel().getSelectedIndex();
 		    Object selectedItem = comboBoxcat.getSelectionModel().getSelectedItem();
 
 		});
-		
+		//combobox select country
+		comboBoxcn.getItems().add("n/a");
+		comboBoxcn.getItems().add("Canada");
+		comboBoxcn.getItems().add("France");
+		comboBoxcn.getItems().add("Germany");
+		comboBoxcn.getItems().add("Greece");
+		comboBoxcn.getItems().add("Italy");
+		comboBoxcn.getItems().add("Japan");
+		comboBoxcn.getItems().add("China");
+		comboBoxcn.getItems().add("Portugal");
+		comboBoxcn.getItems().add("Turkey");
+		comboBoxcn.getItems().add("Great Britain");
+		comboBoxcn.getItems().add("United States");
+		comboBoxcn.getSelectionModel().selectFirst();
+
+		comboBoxcn.setOnAction((event) -> {
+			int selectedIndex = comboBoxcn.getSelectionModel().getSelectedIndex();
+		    Object selectedItem = comboBoxcn.getSelectionModel().getSelectedItem();
+
+		});
 		
 		
 		
@@ -103,18 +129,20 @@ public class HeadlinesSceneCreator  extends SceneCreator implements EventHandler
 		//customize Flow Pane
 		buttonFlowPane.setHgap(10);
 		buttonFlowPane.setAlignment(Pos.BOTTOM_CENTER);
+		buttonFlowPane.getChildren().add(backBtn);
 		buttonFlowPane.getChildren().add(saveNewsBtn);
 		
 		buttonFlowPane3.setHgap(10);
 		buttonFlowPane3.setAlignment(Pos.BOTTOM_CENTER);
-		buttonFlowPane3.getChildren().add(backBtn);
+		buttonFlowPane3.getChildren().add(clearBtn);		
 		buttonFlowPane3.getChildren().add(closeBtn);
 		
 		buttonFlowPane2.setHgap(10);
 		buttonFlowPane2.setAlignment(Pos.BOTTOM_CENTER);
-		buttonFlowPane2.setPrefWrapLength(210);
-		buttonFlowPane2.getChildren().add(clearBtn);
+		buttonFlowPane2.setPrefWrapLength(210);		
+		buttonFlowPane2.getChildren().add(previousBtn);
 		buttonFlowPane2.getChildren().add(searchNewsBtn);
+		
 	
 		//customize input field Grid Pane
 		inputFieldsPane.setAlignment(Pos.TOP_RIGHT);
@@ -123,7 +151,7 @@ public class HeadlinesSceneCreator  extends SceneCreator implements EventHandler
 		rootGridPane.getColumnConstraints().add(new ColumnConstraints(780));
 		rootGridPane.getColumnConstraints().add(new ColumnConstraints(300));
 		inputFieldsPane.add(countryLbl, 0, 1);
-		inputFieldsPane.add(countryField, 1, 1);
+		inputFieldsPane.add(comboBoxcn, 1, 1);
 		inputFieldsPane.add(categoryLbl, 0, 2);
 		inputFieldsPane.add(comboBoxcat, 1, 2);
 		inputFieldsPane.add(buttonFlowPane2, 1, 7);
@@ -164,7 +192,7 @@ public class HeadlinesSceneCreator  extends SceneCreator implements EventHandler
 		backBtn.setOnMouseClicked(this);
 		clearBtn.setOnMouseClicked(this);
 		closeBtn.setOnMouseClicked(this);
-	
+		previousBtn.setOnMouseClicked(this);
 	}
 
 	@Override
@@ -187,16 +215,84 @@ public class HeadlinesSceneCreator  extends SceneCreator implements EventHandler
 		else if (event.getSource() == clearBtn) {
 			clearTextFields();
 		}
+		else if (event.getSource() == previousBtn) {
+			
+			try {
+				ArrayList<String> readLastSearch = DatabaseConnection.readLastTopSearch();
+				System.out.println(readLastSearch);
+				newsTableView.getItems().clear();
+				String cnt=readLastSearch.get(1);
+				String ctg=readLastSearch.get(2);
+				getTopHeadlines(cnt,ctg);
+				tableSync();
+				clearTextFields();
+				
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				PopUpError.DisplayError(e,"Connection with DB problem");
+			} catch (NewsAPIException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				PopUpError.DisplayError(e,"Problem with search criteria, please try again");
+			}
+				
+
+		}
 		else if (event.getSource() == searchNewsBtn) {
 			newsTableView.getItems().clear();
-			String country = countryField.getText();				//get the value of country
+			String cn="";
+			String country =(String)comboBoxcn.getValue();				//get the value of country
 		    String cat = (String) comboBoxcat.getValue();			//get the value of category
+		    switch (country) {
+		    case "n/a"://change the value according to combobox display text
+		    	try {
+					cn=IpAPI.getIpAPIService().findCountry(null);
+				} catch (NewsAPIException e2) {
+					// TODO Auto-generated catch block
+					e2.printStackTrace();
+				}
+		    	break;
+		    case "Greece":
+		    	cn="gr";
+		    	break;
+		    case "Canada":
+		    	cn="ca";
+		    	break;
+		    case "China":
+		    	cn="cn";
+		    	break;
+		    case "Germany":
+		    	cn="de";
+		    	break;
+		    case "France":
+		    	cn="fr";
+		    	break;
+		    case "Italy":
+		    	cn="it";
+		    	break;
+		    case "Japan":
+		    	cn="jp";
+		    	break;
+		    case "Great Britain":
+		    	cn="gb";
+		    	break;
+		    case "United States":
+		    	cn="us";
+		    	break;
+		    case "Turkey":
+		    	cn="tr";
+		    	break;
+		    case "Portugal":
+		    	cn="pt";
+		    	break;
+		    }
 		    
 		    try {
 		    	if(cat==null) {
-		    		DatabaseConnection.addNews(country," ", " ", " ", " ", " ", " "); 
+		    		DatabaseConnection.addNews(cn," ", " ", " ", " ", " ", " "); 	//add not null values to db and country
 		    	}else {
-		    		DatabaseConnection.addNews(country,cat, " ", " ", " ", " ", " "); 	//add search to database table by calling addNews function
+		    		DatabaseConnection.addNews(cn,cat, " ", " ", " ", " ", " "); 	//add search to database table by calling addNews function
 		    	}
 		    } catch (SQLException e1) {
 				// TODO Auto-generated catch block
@@ -204,12 +300,13 @@ public class HeadlinesSceneCreator  extends SceneCreator implements EventHandler
 			}
 			try {
 				newsTableView.getItems().clear();
-				getTopHeadlines(country,cat);
+				getTopHeadlines(cn,cat);
 				tableSync();
 				clearTextFields();
 				
 			} catch (NewsAPIException e) {
 				// TODO Auto-generated catch block
+				PopUpError.DisplayError(e,"Problem with search criteria, please try again");
 				newsTableView.getItems().clear();
 				e.printStackTrace();
 			}
@@ -223,8 +320,9 @@ public class HeadlinesSceneCreator  extends SceneCreator implements EventHandler
 		App.mainStage.close();								//close main stage
 
 	}
-
+	
 	public void getTopHeadlines(String country,String category) throws NewsAPIException {
+		newsList.clear();
 		final IpAPIService IpSearchService = IpAPI.getIpAPIService();										//Function for getting the Country through IP Geolocation API results based on parameters
 		final String Country = IpSearchService.findCountry(null);
 		final NewsAPIService newsSearchService = NewsAPI.getNewsAPIService();
@@ -242,6 +340,7 @@ public class HeadlinesSceneCreator  extends SceneCreator implements EventHandler
 
 	}
 
+
 	public void tableSync() {
 		List<NewsInfo> items = newsTableView.getItems();
 		items.clear();
@@ -254,7 +353,8 @@ public class HeadlinesSceneCreator  extends SceneCreator implements EventHandler
 
 	}
 	public void clearTextFields() {
-		countryField.setText("");
+		comboBoxcn.setValue("n/a");
+		comboBoxcat.setValue("");
 		
 
 	}

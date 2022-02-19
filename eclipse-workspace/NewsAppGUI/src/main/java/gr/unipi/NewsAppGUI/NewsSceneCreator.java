@@ -6,6 +6,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.JOptionPane;
+
 import exception.NewsAPIException;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
@@ -40,7 +42,7 @@ public class NewsSceneCreator extends SceneCreator implements EventHandler<Mouse
 	// Grid pane
 	GridPane rootGridPane, inputFieldsPane;
 	// buttons
-	Button searchNewsBtn, saveNewsBtn, clearBtn, backBtn, closeButton;
+	Button searchNewsBtn, saveNewsBtn, clearBtn, backBtn, closeButton, previousBtn;
 	// combo box
 	ComboBox comboBoxcat, comboBoxlan;
 	// label
@@ -118,10 +120,12 @@ public class NewsSceneCreator extends SceneCreator implements EventHandler<Mouse
 		backBtn = new Button("Back");
 		clearBtn = new Button("Clear");
 		closeButton = new Button("Exit");
+		previousBtn = new Button ("Previous Search");
 
 		saveNewsBtn.setMinSize(120, 30);
 		backBtn.setMinSize(120, 30);
 		closeButton.setMinSize(120, 30);
+		clearBtn.setMinSize(120, 30);
 
 
 		startDatePicker.setValue(LocalDate.now());
@@ -130,20 +134,21 @@ public class NewsSceneCreator extends SceneCreator implements EventHandler<Mouse
 		inputFieldsPane = new GridPane();
 		newsTableView = new TableView<NewsInfo>();
 
-		// customize Flow Pane
+		//customize Flow Pane
 		buttonFlowPane.setHgap(10);
 		buttonFlowPane.setAlignment(Pos.BOTTOM_CENTER);
+		buttonFlowPane.getChildren().add(backBtn);
 		buttonFlowPane.getChildren().add(saveNewsBtn);
-
+		
 		buttonFlowPane3.setHgap(10);
 		buttonFlowPane3.setAlignment(Pos.BOTTOM_CENTER);
-		buttonFlowPane3.getChildren().add(backBtn);
+		buttonFlowPane3.getChildren().add(clearBtn);		
 		buttonFlowPane3.getChildren().add(closeButton);
-
+		
 		buttonFlowPane2.setHgap(10);
 		buttonFlowPane2.setAlignment(Pos.BOTTOM_CENTER);
-		buttonFlowPane2.setPrefWrapLength(210);
-		buttonFlowPane2.getChildren().add(clearBtn);
+		buttonFlowPane2.setPrefWrapLength(210);		
+		buttonFlowPane2.getChildren().add(previousBtn);
 		buttonFlowPane2.getChildren().add(searchNewsBtn);
 
 		// customize input field Grid Pane
@@ -202,6 +207,7 @@ public class NewsSceneCreator extends SceneCreator implements EventHandler<Mouse
 		backBtn.setOnMouseClicked(this);
 		clearBtn.setOnMouseClicked(this);
 		closeButton.setOnMouseClicked(this);
+		previousBtn.setOnMouseClicked(this);
 
 	}
 
@@ -226,7 +232,38 @@ public class NewsSceneCreator extends SceneCreator implements EventHandler<Mouse
 			App.mainStage.setScene(App.hsScene);
 		} else if (event.getSource() == clearBtn) {
 			clearTextFields();
-		} else if (event.getSource() == searchNewsBtn) { // after searchbtn get values of the components
+		}else if (event.getSource() == previousBtn) {
+			
+			try {
+				ArrayList<String> readLastSearch = DatabaseConnection.readLastSearch();
+				System.out.println(readLastSearch);
+				newsTableView.getItems().clear();
+				String cnt=readLastSearch.get(1);
+				String ctg=readLastSearch.get(2);
+				String q=readLastSearch.get(3);
+				String lan=readLastSearch.get(4);
+				String sources=readLastSearch.get(5);
+				String from=readLastSearch.get(6);
+				String to=readLastSearch.get(7);
+				System.out.println(cnt+" 1,"+ctg+" 2,"+q+" 3,"+lan+" 4,"+sources+" 5,"+from+" 6,"+to+" 7,");
+				getNewsBySearch(null,ctg, q, lan, sources, from,to);
+				tableSync();
+				clearTextFields();
+				
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				PopUpError.DisplayError(e,"Connection with DB problem");
+				
+			} catch (NewsAPIException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				PopUpError.DisplayError(e,"Problem with search criteria, please try again");
+			}
+				
+
+		}
+		else if (event.getSource() == searchNewsBtn) { // after searchbtn get values of the components
 			key = keywordField.getText();
 			cat = (String) comboBoxcat.getValue();
 			source = sourceField.getText();
@@ -235,9 +272,9 @@ public class NewsSceneCreator extends SceneCreator implements EventHandler<Mouse
 			String to = endDatePicker.getValue().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
 			try {
-				if (cat == null && language != null) {// problem when inserting null values (cat-lan) at db
-					DatabaseConnection.addNews(" ", " ", key, language, source, from, to); // insert values of the
-																							// components into the db
+				if (cat == null && language != null) {												// problem when inserting null values (cat-lan) at db
+					DatabaseConnection.addNews(" ", " ", key, language, source, from, to); 			// insert values of the
+																									// components into the db
 				} else if (cat == null && language == null) {
 					DatabaseConnection.addNews(" ", " ", key, " ", source, from, to);
 				} else if (cat != null && language == null) {
@@ -246,9 +283,11 @@ public class NewsSceneCreator extends SceneCreator implements EventHandler<Mouse
 					DatabaseConnection.addNews(" ", cat, key, language, source, from, to);
 				}
 
-			} catch (SQLException e1) { // sql excpetion
+			} catch (SQLException e1) { // sql exception
 				// TODO Auto-generated catch block
+				PopUpError.DisplayError(e1,"Connection with DB problem");
 				e1.printStackTrace();
+				
 			}
 			try {
 				getNewsBySearch(null, cat, key, language, source, from, to); // call function getNewsBySearch ,to search
@@ -258,7 +297,7 @@ public class NewsSceneCreator extends SceneCreator implements EventHandler<Mouse
 
 			} catch (NewsAPIException e) {
 				// TODO Auto-generated catch block
-
+				PopUpError.DisplayError(e,"Problem with search criteria, please try again");
 				newsTableView.getItems().clear();
 				e.printStackTrace();
 
@@ -271,6 +310,7 @@ public class NewsSceneCreator extends SceneCreator implements EventHandler<Mouse
 
 	public void getNewsBySearch(String country, String category, String q, String language, String sources, String from,
 			String to) throws NewsAPIException {
+		newsList.clear();
 		final IpAPIService IpSearchService = IpAPI.getIpAPIService();			//call getIpApiservice for automatic geolocation
 		final NewsAPIService newsSearchService = NewsAPI.getNewsAPIService();
 		final String Country = IpSearchService.findCountry(null);				//get the country

@@ -19,15 +19,15 @@ public class App extends Application{
 	 //Stage
     static Stage mainStage;
     //Scene
-    static Scene mainScene, newsScene,topScene,oopUpError,hsScene, logoutScene;
+    static Scene mainScene, newsScene,topScene,errorScene,hsScene, logoutScene;
     //Flow pane root
 
     @Override
     public void start(Stage mainStage) {
-
+    	
         this.mainStage=mainStage;
-    
-		SceneCreator mainSceneCreator = new MainSceneCreator(640, 480);
+        //create scene for every class 
+		SceneCreator mainSceneCreator = new MainSceneCreator(640, 480);//main scene 
 		mainScene = mainSceneCreator.createScene();
 		SceneCreator newsSceneCreator = new NewsSceneCreator(1157, 525);
 		newsScene = newsSceneCreator.createScene();
@@ -35,8 +35,8 @@ public class App extends Application{
 		topScene = topSceneCreator.createScene();
 		SceneCreator historySearchDisplay = new HistorySearchDisplay(854, 493);
 		hsScene = historySearchDisplay.createScene();
-//     SceneCreator  popUpError = new PopUpError(640,480);
-//    mainScene = mainSceneCreator.createScene();
+		//SceneCreator  popUpError = new PopUpError(640,480);
+		//errorScene = popUpError.createScene();
         
 
         

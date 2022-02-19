@@ -73,7 +73,7 @@ public class MainSceneCreator extends SceneCreator implements EventHandler<Mouse
 			App.mainStage.setTitle("News Window");
 			App.mainStage.setScene(App.newsScene);
 		}else if (event.getSource()==headlines) {
-			App.mainStage.setTitle("News Window");
+			App.mainStage.setTitle("Top Headlines Window");
 			App.mainStage.setScene(App.topScene);
 		}
 	}

@@ -22,25 +22,54 @@ public class DatabaseConnection {
 	 static final IpAPIService IpAPIService = IpAPI.getIpAPIService();
 	
 	public static ResultSet readNews() throws SQLException {
-	    try (Connection con = DriverManager.getConnection(SQL_CONN_STRING, USER, PASS)) {//������� �������� �� ��� ����
+	    try (Connection con = DriverManager.getConnection(SQL_CONN_STRING, USER, PASS)) {//connect to db credentials
 	        try(Statement pstmt = con.createStatement()){
 	        try (ResultSet resultSet = pstmt.executeQuery("select * from NEWS_CRITERIA ORDER BY CREATED_AT DESC LIMIT 5")) {//��� queries ��� �������� ����������
-//	          List<String> criteriaList = new ArrayList<>();							//���������� ��� ��� ����� ��� �� ������� �� �� ������������
-//	          while (resultSet.next()) {											//loop ��� ���� ������ ��� ������
-//	            String country = resultSet.getString("COUNTRY");
-//	            String category = resultSet.getString("CATEGORY");
-//	            String keyword = resultSet.getString("KEYWORD");
-//	            String language = resultSet.getString("LANG");
-//	            String domains = resultSet.getString("DOMAINS");
-//	            String from = resultSet.getString("DATE_FROM");
-//	            String to = resultSet.getString("DATE_TO");
-//	            String row= (country +"|"+category+"|"+keyword+"|"+language+"|"+domains+"|"+from+"|"+to);
-//	            criteriaList.add(row);
-//	          }
-//	         
-//	          System.out.println(criteriaList);
-	        	//System.out.println(resultSet);
 	        	return   resultSet;
+	        
+	        }
+	        }
+	      }
+	    }
+	public static ArrayList<String> readLastTopSearch() throws SQLException {
+	    try (Connection con = DriverManager.getConnection(SQL_CONN_STRING, USER, PASS)) {//connect to db credentials
+	        try(Statement pstmt = con.createStatement()){
+	        try (ResultSet resultSet = pstmt.executeQuery("select  * from NEWS_CRITERIA where length(country)>1 ORDER BY CREATED_AT DESC LIMIT 1,1;")) {//return second to last row from db
+	        	
+	        	//Stores properties of a ResultSet object, including column count
+	        	ResultSetMetaData rsmd = resultSet.getMetaData(); 
+	        	int columnCount = rsmd.getColumnCount();
+	        	
+	        	ArrayList<String> ResultList = new ArrayList<>(columnCount); 
+	        	while (resultSet.next()) {              
+	        	   int i = 1;
+	        	   while(i <= columnCount) {
+	        	        ResultList.add(resultSet.getString(i++));
+	        	   }
+	        	}
+	        	return   ResultList;
+	        
+	        }
+	        }
+	      }
+	    }
+	public static ArrayList<String> readLastSearch() throws SQLException {
+	    try (Connection con = DriverManager.getConnection(SQL_CONN_STRING, USER, PASS)) {//connect to db credentials
+	        try(Statement pstmt = con.createStatement()){
+	        try (ResultSet resultSet = pstmt.executeQuery("select  * from NEWS_CRITERIA where length(country)<2 ORDER BY CREATED_AT DESC LIMIT 1,1;")) {//return second to last row from db
+	        	
+	        	//Stores properties of a ResultSet object, including column count
+	        	ResultSetMetaData rsmd = resultSet.getMetaData(); 
+	        	int columnCount = rsmd.getColumnCount();
+	        	
+	        	ArrayList<String> ResultList = new ArrayList<>(columnCount); 
+	        	while (resultSet.next()) {              
+	        	   int i = 1;
+	        	   while(i <= columnCount) {
+	        	        ResultList.add(resultSet.getString(i++));
+	        	   }
+	        	}
+	        	return   ResultList;
 	        
 	        }
 	        }

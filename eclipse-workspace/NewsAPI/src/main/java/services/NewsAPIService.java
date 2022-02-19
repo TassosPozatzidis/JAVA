@@ -74,32 +74,10 @@ public class NewsAPIService {
 		return string;																									//return the list of Articles
 	}
 	
-	// https://api.themoviedb.org/3/search/movie?query={parameter}
-	// search for movies
-	
-	public List<NewsInfo> searchARticlesByKeyword(String parameter, String parameter2) throws NewsAPIException {
-		NewsResult result = getAPIData("everything", parameter,parameter2,null,null,null, API_URL, API_KEY);
-		List<NewsInfo> newsInfoList = new ArrayList<>(result.getArticles().size());
-		for (Article theResult : result.getArticles()) {
-			newsInfoList.add(new NewsInfo(theResult));
-		}
-		
-		return newsInfoList;
-		
-	}
-	public List<NewsInfo> searchAllCriteria(String parameter, String parameter2,String parameter3,String parameter4,String parameter5) throws NewsAPIException {
-		NewsResult result = getAPIData("everything", parameter,parameter2,parameter3,parameter4,parameter5 ,API_URL, API_KEY);
-		List<NewsInfo> newsInfoList = new ArrayList<>(result.getArticles().size());
-		for (Article theResult : result.getArticles()) {
-			newsInfoList.add(new NewsInfo(theResult));
-		}
-		
-		return newsInfoList;
-		
-	}
+	//search with everything end point with all criteria available
 	public List<NewsInfo> searchAllCriteriaCategory(String country,String category,String q,String language,String sources, String from,String to) throws NewsAPIException {
 		if (category != null && !category.equals("") ) {
-			sources=getSourceByCategory(country,category) ;
+			sources=getSourceByCategory(country,category) ; //to get the category we call getSourceByCategory wich returns the ID of the sources in a category
 		}
 		List<NewsInfo> newsInfoList=null;
 			NewsResult result = getAPIData("everything",q,language,sources,from,to ,API_URL, API_KEY);
@@ -108,7 +86,7 @@ public class NewsAPIService {
 				newsInfoList.add(new NewsInfo(theResult));
 			}
 		
-		return newsInfoList;
+		return newsInfoList; //returns the list
 	}
 	
 	// get API Data
