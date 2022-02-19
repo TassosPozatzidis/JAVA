@@ -1,9 +1,0 @@
-<beans xmlsn="http://springframework.org.schema/beans"
-xmlsn:xsi="http://www.w3.org/2001/XMLSchema-instance"
-xsi:schemaLocation="http://www.springframework.org/schema/beans
-http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
-
-<bean id="restaurantBean" class="org.gontuseries.springcore">
-</bean>
-
-</beans>
